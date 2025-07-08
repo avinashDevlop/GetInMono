@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Star, StarOff, ChevronLeft, ChevronRight, Grid3X3, Crown } from "lucide-react";
+import { Search, Star, StarOff, ChevronLeft, ChevronRight, Grid3X3, Crown, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface App {
@@ -18,6 +18,7 @@ export const RightDragSidebar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAddFavorite, setShowAddFavorite] = useState(false);
   const { toast } = useToast();
 
   const apps: App[] = [
@@ -47,16 +48,17 @@ export const RightDragSidebar = () => {
 
   const favoriteApps = apps.filter(app => favorites.includes(app.name));
 
-  // Auto-open app when only one match
+  // Show add favorite suggestion when no favorites exist
   useEffect(() => {
-    if (searchTerm && filteredApps.length === 1) {
+    if (favorites.length === 0 && !searchTerm) {
       const timer = setTimeout(() => {
-        handleAppClick(filteredApps[0].url);
-        setSearchTerm("");
-      }, 1000);
+        setShowAddFavorite(true);
+      }, 1500);
       return () => clearTimeout(timer);
+    } else {
+      setShowAddFavorite(false);
     }
-  }, [searchTerm, filteredApps]);
+  }, [favorites, searchTerm]);
 
   const handleAppClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -102,21 +104,21 @@ export const RightDragSidebar = () => {
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`
-    relative
-    bg-gradient-to-r from-blue-600 to-purple-600 
-    hover:from-blue-500 hover:to-purple-500
-    active:from-blue-700 active:to-purple-700
-    border-2 border-blue-400/30
-    rounded-full
-    w-12 h-12
-    shadow-lg
-    text-white 
-    transition-all duration-300
-    hover:shadow-xl hover:scale-110
-    active:scale-95
-    group
-    overflow-hidden
-  `}
+            relative
+            bg-gradient-to-r from-blue-600 to-purple-600 
+            hover:from-blue-500 hover:to-purple-500
+            active:from-blue-700 active:to-purple-700
+            border-2 border-blue-400/30
+            rounded-full
+            w-12 h-12
+            shadow-lg
+            text-white 
+            transition-all duration-300
+            hover:shadow-xl hover:scale-110
+            active:scale-95
+            group
+            overflow-hidden
+          `}
         >
           {/* Animated background */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -132,15 +134,15 @@ export const RightDragSidebar = () => {
 
           {/* Motivational tooltip */}
           <div className={`
-    absolute right-full top-1/2 transform -translate-y-1/2
-    mr-3 px-3 py-1.5
-    bg-slate-800 text-xs font-medium
-    rounded-md whitespace-nowrap
-    shadow-md
-    opacity-0 group-hover:opacity-100
-    transition-all duration-200
-    ${isOpen ? 'translate-x-1' : '-translate-x-1'}
-  `}>
+            absolute right-full top-1/2 transform -translate-y-1/2
+            mr-3 px-3 py-1.5
+            bg-slate-800 text-xs font-medium
+            rounded-md whitespace-nowrap
+            shadow-md
+            opacity-0 group-hover:opacity-100
+            transition-all duration-200
+            ${isOpen ? 'translate-x-1' : '-translate-x-1'}
+          `}>
             {isOpen ? "Close launcher" : "Quick access!"}
             <div className="absolute top-1/2 right-0 transform translate-x-full -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
           </div>
@@ -164,7 +166,7 @@ export const RightDragSidebar = () => {
                 <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   App Launcher
                 </h2>
-                <p className="text-xs md:text-sm text-slate-400">Type to search and access apps</p>
+                <p className="text-xs md:text-sm text-slate-400">Quick access to your favorite apps</p>
               </div>
             </div>
             <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400">
@@ -184,20 +186,10 @@ export const RightDragSidebar = () => {
             />
           </div>
 
-          {/* Auto-open notification */}
-          {searchTerm && filteredApps.length === 1 && (
-            <div className="mb-3 p-2 md:p-3 bg-green-500/10 border border-green-500/20 rounded-lg animate-pulse">
-              <p className="text-green-400 text-xs md:text-sm flex items-center">
-                <span className="mr-2">✨</span>
-                Auto-opening {filteredApps[0].name} in 1 second...
-              </p>
-            </div>
-          )}
-
           {/* Main Content */}
           <div className="flex-1 overflow-hidden flex flex-col">
-            {/* Favorites Section - Only shown when not searching */}
-            {!searchTerm && favoriteApps.length > 0 && (
+            {/* Favorites Section */}
+            {!searchTerm && (
               <div className="mb-2 md:mb-3">
                 <div className="flex items-center justify-between mb-2 md:mb-3">
                   <h3 className="text-xs md:text-sm font-semibold text-slate-300 flex items-center">
@@ -206,46 +198,88 @@ export const RightDragSidebar = () => {
                   </h3>
                   <span className="text-xs text-slate-500">{favorites.length}/3</span>
                 </div>
-                <div className="grid grid-cols-3 gap-2 md:gap-3">
-                  {favoriteApps.map((app) => (
-                    <button
-                      key={app.name}
-                      onClick={() => handleAppClick(app.url)}
-                      className="flex flex-col items-center p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-200 group relative"
-                    >
-                      <span className="text-xl md:text-2xl mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-200">
-                        {app.icon}
-                      </span>
-                      <span className="text-white text-xs text-center font-medium truncate w-full">
-                        {app.name}
-                      </span>
+                
+                {favoriteApps.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2 md:gap-3">
+                    {favoriteApps.map((app) => (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(app.name);
-                        }}
-                        className="absolute -top-1 -right-1 p-0.5 bg-yellow-500 rounded-full"
+                        key={app.name}
+                        onClick={() => handleAppClick(app.url)}
+                        className="flex flex-col items-center p-2 md:p-3 rounded-lg md:rounded-xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 hover:border-yellow-500/40 transition-all duration-200 group relative"
                       >
-                        <Star className="h-2.5 w-2.5 text-white fill-white" />
+                        <span className="text-xl md:text-2xl mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-200">
+                          {app.icon}
+                        </span>
+                        <span className="text-white text-xs text-center font-medium truncate w-full">
+                          {app.name}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(app.name);
+                          }}
+                          className="absolute -top-1 -right-1 p-0.5 bg-yellow-500 rounded-full hover:bg-yellow-600 transition-colors"
+                        >
+                          <Star className="h-2.5 w-2.5 text-white fill-white" />
+                        </button>
                       </button>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-6 rounded-lg bg-slate-800/30 border border-dashed border-slate-600/50">
+                    {showAddFavorite ? (
+                      <>
+                        <div className="text-4xl mb-3">⭐</div>
+                        <p className="text-slate-300 text-sm text-center mb-2">
+                          Get started by adding your favorite apps
+                        </p>
+                        <p className="text-slate-500 text-xs text-center mb-4">
+                          Search for an app and click the star to add it here
+                        </p>
+                        <div className="flex flex-col space-y-2 w-full">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs border-blue-500/30 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                            onClick={() => setSearchTerm("Gmail")}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Gmail
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs border-purple-500/30 text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+                            onClick={() => setSearchTerm("Notion")}
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Notion
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-4xl mb-3">🌟</div>
+                        <p className="text-slate-400 text-sm text-center">
+                          Your favorite apps will appear here
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Search Results / All Apps */}
+            {/* Search Results */}
             <div className="flex-1 overflow-hidden">
-              {searchTerm ? (
+              {searchTerm && (
                 <>
                   <h3 className="text-xs md:text-sm font-semibold text-slate-300 mb-2 md:mb-3">
-                    Search Results ({filteredApps.length})
+                    {filteredApps.length > 0 ? `Found ${filteredApps.length} apps` : 'No results found'}
                   </h3>
                   {filteredApps.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-40">
                       <div className="text-4xl mb-3">🔍</div>
-                      <p className="text-slate-400 text-sm">No apps found</p>
-                      <p className="text-slate-500 text-xs">Try a different search term</p>
+                      <p className="text-slate-400 text-sm text-center mb-1">No apps found for "{searchTerm}"</p>
+                      <p className="text-slate-500 text-xs text-center">Try searching for "Gmail", "Notion", etc.</p>
                     </div>
                   ) : (
                     <div className="space-y-1 md:space-y-2 max-h-full overflow-y-auto pr-1 md:pr-2">
@@ -288,52 +322,6 @@ export const RightDragSidebar = () => {
                       ))}
                     </div>
                   )}
-                </>
-              ) : (
-                <>
-                  {/* All Apps Section */}
-                  <h3 className="text-xs md:text-sm font-semibold text-slate-300 mb-2 md:mb-3">
-                    All Apps
-                  </h3>
-                  <div className="space-y-1 md:space-y-2 max-h-[90%] overflow-y-auto pr-1 md:pr-2">
-                    {apps.map((app) => (
-                      <div key={app.name} className="relative">
-                        <button
-                          onClick={() => handleAppClick(app.url)}
-                          className="flex items-center w-full p-2 md:p-3 rounded-lg md:rounded-xl bg-slate-700/30 hover:bg-slate-600/50 border border-slate-600/30 hover:border-blue-500/50 transition-all duration-200 group"
-                        >
-                          <span className="text-xl md:text-2xl mr-2 md:mr-4 group-hover:scale-110 transition-transform duration-200">
-                            {app.icon}
-                          </span>
-                          <div className="flex-1 text-left overflow-hidden">
-                            <span className="text-white text-xs md:text-sm font-medium block truncate">
-                              {app.name}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className="text-xxs md:text-xs mt-0.5 md:mt-1 border-slate-500/30 text-slate-400"
-                            >
-                              {app.category}
-                            </Badge>
-                          </div>
-                        </button>
-
-                        <button
-                          onClick={() => toggleFavorite(app.name)}
-                          className={`absolute top-1.5 right-1.5 p-1 rounded-full transition-all ${favorites.includes(app.name)
-                              ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                              : "bg-slate-600/50 text-slate-400 hover:bg-slate-500/50 hover:text-white"
-                            }`}
-                        >
-                          {favorites.includes(app.name) ? (
-                            <Star className="h-3 w-3 fill-current" />
-                          ) : (
-                            <StarOff className="h-3 w-3" />
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
                 </>
               )}
             </div>

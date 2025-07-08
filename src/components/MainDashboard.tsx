@@ -242,7 +242,7 @@ export const MainDashboard = () => {
   }, [settings.workDuration]);
 
   return (
-    <section className="py-10 px-4 sm:px-6 lg:px-12 min-h-screen bg-gradient-to-br from-slate-900 to-gray-950 text-slate-900 relative">
+    <section className="py-10 px-8 sm:px-6 lg:px-12 min-h-screen bg-gradient-to-br from-slate-900 to-gray-950 text-slate-900 relative">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-white mb-10">
           Your Productivity Tools
