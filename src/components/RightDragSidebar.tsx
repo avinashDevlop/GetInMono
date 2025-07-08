@@ -19,6 +19,7 @@ export const RightDragSidebar = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAddFavorite, setShowAddFavorite] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { toast } = useToast();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,20 @@ export const RightDragSidebar = () => {
   ];
 
   useEffect(() => {
+    // Check if mobile view
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         isOpen && 
@@ -67,16 +82,17 @@ export const RightDragSidebar = () => {
 
   const favoriteApps = apps.filter(app => favorites.includes(app.name));
 
-  useEffect(() => {
-    if (searchTerm && filteredApps.length === 1) {
-      const timer = setTimeout(() => {
-        handleAppClick(filteredApps[0].url);
-        setSearchTerm("");
-      }, 1000);
+useEffect(() => {
+  if (searchTerm && filteredApps.length === 1 && favorites.length >= 3) {
+    const timer = setTimeout(() => {
+      handleAppClick(filteredApps[0].url);
+      setSearchTerm("");
+    }, 1000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [searchTerm, filteredApps]);
+    return () => clearTimeout(timer);
+  }
+}, [searchTerm, filteredApps, favorites]);
+
 
   useEffect(() => {
     if (favorites.length === 0 && !searchTerm) {
@@ -88,6 +104,22 @@ export const RightDragSidebar = () => {
       setShowAddFavorite(false);
     }
   }, [favorites, searchTerm]);
+
+  useEffect(() => {
+    // Auto-open premium modal when reaching 3 favorites
+    if (favorites.length === 3) {
+      const timer = setTimeout(() => {
+        setShowPremiumModal(true);
+        toast({
+          title: "Favorites limit reached",
+          description: "Upgrade to premium for unlimited favorites.",
+          variant: "destructive",
+        });
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [favorites.length]);
 
   const handleAppClick = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -151,7 +183,7 @@ export const RightDragSidebar = () => {
       {/* Sidebar Toggle Button */}
       <div
         className={`fixed top-[calc(50%+40px)] transform -translate-y-1/2 z-50 transition-all duration-300 sidebar-toggle-button ${
-          isOpen ? 'right-[320px] md:right-[420px]' : 'right-0'
+          isOpen ? `right-[${isMobile ? '280px' : '320px'}] md:right-[420px]` : 'right-0'
         }`}
       >
         <button
@@ -201,13 +233,13 @@ export const RightDragSidebar = () => {
       {/* Sidebar */}
       <div 
         ref={sidebarRef}
-        className={`fixed top-[80px] right-0 w-[320px] md:w-[420px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-l-2xl transition-transform duration-300 z-40 shadow-xl ${
+        className={`fixed top-[80px] right-0 w-[280px] md:w-[420px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-l-2xl transition-transform duration-300 z-40 shadow-xl ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{
           height: 'calc(min(90vh, 100vh - 100px))',
-          maxHeight: '800px',
-          minHeight: '400px'
+          maxHeight: '500px',
+          minHeight: '300px'
         }}
       >
         <Card className="bg-transparent border-none p-4 md:p-6 h-full flex flex-col">
@@ -382,11 +414,11 @@ export const RightDragSidebar = () => {
         </Card>
       </div>
 
-      {/* Premium Modal */}
+      {/* Premium Modal - Responsive */}
       {showPremiumModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between mb-4">
+          <div className={`bg-slate-800 border border-slate-700 rounded-xl p-4 md:p-6 ${isMobile ? 'w-full max-w-xs' : 'max-w-md w-full'} shadow-2xl animate-in fade-in zoom-in-95`}>
+            <div className="flex items-center justify-between mb-3 md:mb-4">
               <h3 className="text-lg font-bold text-white flex items-center">
                 <Crown className="h-5 w-5 text-yellow-400 mr-2" />
                 Upgrade to Premium
@@ -398,13 +430,13 @@ export const RightDragSidebar = () => {
                 ✕
               </button>
             </div>
-            <p className="text-slate-300 mb-6">
+            <p className="text-slate-300 mb-4 md:mb-6 text-sm md:text-base">
               You've reached the free limit of 3 favorites. Upgrade to unlock unlimited favorites and more!
             </p>
-            <div className="space-y-4">
-              <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600/50">
-                <h4 className="font-medium text-white mb-2">Premium Features</h4>
-                <ul className="text-sm text-slate-300 space-y-2">
+            <div className="space-y-3 md:space-y-4">
+              <div className="bg-slate-700/50 p-3 md:p-4 rounded-lg border border-slate-600/50">
+                <h4 className="font-medium text-white mb-1 md:mb-2 text-sm md:text-base">Premium Features</h4>
+                <ul className="text-xs md:text-sm text-slate-300 space-y-1 md:space-y-2">
                   <li className="flex items-center">
                     <span className="text-green-400 mr-2">✓</span> Unlimited favorites
                   </li>
@@ -420,7 +452,7 @@ export const RightDragSidebar = () => {
                 </ul>
               </div>
               <Button 
-                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg"
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg text-sm md:text-base"
                 onClick={() => {
                   setShowPremiumModal(false);
                   toast({
@@ -433,7 +465,7 @@ export const RightDragSidebar = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full border-slate-600 text-slate-300 hover:text-white"
+                className="w-full border-slate-600 text-slate-300 hover:text-white text-sm md:text-base"
                 onClick={() => setShowPremiumModal(false)}
               >
                 Maybe Later
