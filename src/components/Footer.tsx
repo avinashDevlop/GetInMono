@@ -1,5 +1,13 @@
-
-import { Heart, Mail, Shield, FileText, Phone, Github, Twitter, Linkedin } from "lucide-react";
+import {
+  Heart,
+  Mail,
+  Shield,
+  FileText,
+  Phone,
+  Github,
+  Twitter,
+  Linkedin,
+} from "lucide-react";
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -7,27 +15,46 @@ export const Footer = () => {
   const socialLinks = [
     { icon: Twitter, name: "Twitter", url: "https://twitter.com" },
     { icon: Github, name: "GitHub", url: "https://github.com" },
-    { icon: Linkedin, name: "LinkedIn", url: "https://linkedin.com" },
+    {
+      icon: Linkedin,
+      name: "LinkedIn",
+      url: "https://www.linkedin.com/in/bhukya-govardhan-naik-221799272/",
+    },
   ];
 
   const footerLinks = [
     { icon: Shield, name: "Privacy Policy", url: "#privacy" },
     { icon: FileText, name: "Terms of Service", url: "#terms" },
-    { icon: Mail, name: "Contact Support", url: "mailto:support@getinmono.com" },
-    { icon: Phone, name: "Help Center", url: "#help" },
+    {
+      icon: Mail,
+      name: "Contact Support",
+      url: "mailto:govardhannaik1438@gmail.com",
+    },
+    {
+      icon: Phone,
+      name: "Call Support",
+      url: "tel:+917202149158",
+    },
+    {
+      icon: Phone,
+      name: "Alternative Number",
+      url: "tel:+916302174395",
+    },
   ];
 
   return (
-    <footer className="bg-gradient-to-t from-black via-slate-950 to-slate-900 border-t border-white/10 py-16">
+    <footer className="bg-gradient-to-t from-black via-slate-950 to-slate-900 border-t border-white/10 py-16 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-8 mb-12">
-          {/* Brand */}
+          {/* Brand Info */}
           <div className="md:col-span-2">
             <h3 className="text-3xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-teal-400 bg-clip-text text-transparent mb-4">
               GetInMono
             </h3>
             <p className="text-slate-300 mb-6 max-w-md leading-relaxed">
-              Revolutionizing digital productivity by unifying all your messaging and social media platforms into one seamless, distraction-free dashboard experience.
+              Revolutionizing digital productivity by unifying all your
+              messaging and social media platforms into one seamless,
+              distraction-free dashboard experience.
             </p>
             <div className="flex items-center text-slate-300">
               <span>Crafted with</span>
@@ -36,7 +63,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Access Links */}
           <div>
             <h4 className="text-white font-bold mb-6 text-lg">Quick Access</h4>
             <div className="space-y-3">
@@ -56,7 +83,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Social & Community */}
+          {/* Social Media */}
           <div>
             <h4 className="text-white font-bold mb-6 text-lg">Connect With Us</h4>
             <div className="space-y-4">
@@ -79,7 +106,8 @@ export const Footer = () => {
                 );
               })}
             </div>
-            
+
+            {/* Newsletter */}
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
               <p className="text-blue-300 text-sm font-medium mb-1">📧 Newsletter</p>
               <p className="text-slate-400 text-xs">
@@ -89,7 +117,7 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Section */}
+        {/* Footer Bottom */}
         <div className="border-t border-white/10 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
@@ -102,7 +130,7 @@ export const Footer = () => {
                 <span>Built with React & TypeScript</span>
               </div>
             </div>
-            
+
             <div className="text-center md:text-right">
               <p className="text-slate-400 text-sm mb-1">
                 Empowering productivity for
@@ -113,12 +141,12 @@ export const Footer = () => {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
-        </div>
+      {/* Decorative Gradient Blurs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
       </div>
     </footer>
   );

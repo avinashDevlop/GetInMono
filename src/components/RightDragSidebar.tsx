@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ export const RightDragSidebar = () => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showAddFavorite, setShowAddFavorite] = useState(false);
   const { toast } = useToast();
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const apps: App[] = [
     { name: "Gmail", icon: "📩", url: "https://mail.google.com", category: "messaging" },
@@ -42,13 +43,41 @@ export const RightDragSidebar = () => {
     { name: "Netflix", icon: "🎬", url: "https://netflix.com", category: "media" },
   ];
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen && 
+        sidebarRef.current && 
+        !sidebarRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('.sidebar-toggle-button')
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const filteredApps = searchTerm
     ? apps.filter(app => app.name.toLowerCase().includes(searchTerm.toLowerCase()))
     : [];
 
   const favoriteApps = apps.filter(app => favorites.includes(app.name));
 
-  // Show add favorite suggestion when no favorites exist
+  useEffect(() => {
+    if (searchTerm && filteredApps.length === 1) {
+      const timer = setTimeout(() => {
+        handleAppClick(filteredApps[0].url);
+        setSearchTerm("");
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, filteredApps]);
+
   useEffect(() => {
     if (favorites.length === 0 && !searchTerm) {
       const timer = setTimeout(() => {
@@ -71,26 +100,49 @@ export const RightDragSidebar = () => {
     }
   };
 
-  const toggleFavorite = (appName: string) => {
+  const toggleFavorite = (appName: string, showToast = true) => {
     if (favorites.includes(appName)) {
       setFavorites(favorites.filter(name => name !== appName));
-      toast({
-        title: "Removed from favorites",
-        description: `${appName} has been removed from your favorites.`,
-      });
+      if (showToast) {
+        toast({
+          title: "Removed from favorites",
+          description: `${appName} has been removed from your favorites.`,
+        });
+      }
     } else if (favorites.length < 3) {
       setFavorites([...favorites, appName]);
-      toast({
-        title: "Added to favorites",
-        description: `${appName} has been added to your favorites.`,
-      });
+      if (showToast) {
+        toast({
+          title: "Added to favorites",
+          description: `${appName} has been added to your favorites.`,
+        });
+      }
     } else {
+      setShowPremiumModal(true);
+      if (showToast) {
+        toast({
+          title: "Favorites limit reached",
+          description: "Upgrade to premium for unlimited favorites.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleFavoriteClick = (appName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (favorites.includes(appName)) {
+      toggleFavorite(appName);
+    } else if (favorites.length >= 3) {
       setShowPremiumModal(true);
       toast({
         title: "Favorites limit reached",
         description: "Upgrade to premium for unlimited favorites.",
         variant: "destructive",
       });
+    } else {
+      toggleFavorite(appName);
     }
   };
 
@@ -98,8 +150,9 @@ export const RightDragSidebar = () => {
     <>
       {/* Sidebar Toggle Button */}
       <div
-        className={`fixed top-[calc(50%+40px)] transform -translate-y-1/2 z-50 transition-all duration-300 ${isOpen ? 'right-[320px] md:right-[420px]' : 'right-0'
-          }`}
+        className={`fixed top-[calc(50%+40px)] transform -translate-y-1/2 z-50 transition-all duration-300 sidebar-toggle-button ${
+          isOpen ? 'right-[320px] md:right-[420px]' : 'right-0'
+        }`}
       >
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -120,10 +173,7 @@ export const RightDragSidebar = () => {
             overflow-hidden
           `}
         >
-          {/* Animated background */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-          {/* Main icon */}
           <div className="relative z-10 flex items-center justify-center">
             {isOpen ? (
               <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
@@ -131,8 +181,6 @@ export const RightDragSidebar = () => {
               <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
             )}
           </div>
-
-          {/* Motivational tooltip */}
           <div className={`
             absolute right-full top-1/2 transform -translate-y-1/2
             mr-3 px-3 py-1.5
@@ -146,15 +194,22 @@ export const RightDragSidebar = () => {
             {isOpen ? "Close launcher" : "Quick access!"}
             <div className="absolute top-1/2 right-0 transform translate-x-full -translate-y-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
           </div>
-
-          {/* Subtle pulse animation */}
           <div className="absolute inset-0 rounded-full border-2 border-white/10 animate-ping opacity-0 group-hover:opacity-100 pointer-events-none"></div>
         </button>
       </div>
 
       {/* Sidebar */}
-      <div className={`fixed top-[80px] right-0 w-[320px] md:w-[420px] h-[calc(100vh-100px)] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-l-2xl transition-transform duration-300 z-40 shadow-xl ${isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+      <div 
+        ref={sidebarRef}
+        className={`fixed top-[80px] right-0 w-[320px] md:w-[420px] bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-l-2xl transition-transform duration-300 z-40 shadow-xl ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        style={{
+          height: 'calc(min(90vh, 100vh - 100px))',
+          maxHeight: '800px',
+          minHeight: '400px'
+        }}
+      >
         <Card className="bg-transparent border-none p-4 md:p-6 h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 md:mb-6">
@@ -187,7 +242,7 @@ export const RightDragSidebar = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col">
             {/* Favorites Section */}
             {!searchTerm && (
               <div className="mb-2 md:mb-3">
@@ -214,10 +269,7 @@ export const RightDragSidebar = () => {
                           {app.name}
                         </span>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(app.name);
-                          }}
+                          onClick={(e) => handleFavoriteClick(app.name, e)}
                           className="absolute -top-1 -right-1 p-0.5 bg-yellow-500 rounded-full hover:bg-yellow-600 transition-colors"
                         >
                           <Star className="h-2.5 w-2.5 text-white fill-white" />
@@ -269,7 +321,7 @@ export const RightDragSidebar = () => {
             )}
 
             {/* Search Results */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 min-h-[200px] overflow-y-auto">
               {searchTerm && (
                 <>
                   <h3 className="text-xs md:text-sm font-semibold text-slate-300 mb-2 md:mb-3">
@@ -282,7 +334,7 @@ export const RightDragSidebar = () => {
                       <p className="text-slate-500 text-xs text-center">Try searching for "Gmail", "Notion", etc.</p>
                     </div>
                   ) : (
-                    <div className="space-y-1 md:space-y-2 max-h-full overflow-y-auto pr-1 md:pr-2">
+                    <div className="space-y-1 md:space-y-2">
                       {filteredApps.map((app) => (
                         <div key={app.name} className="relative">
                           <button
@@ -306,11 +358,12 @@ export const RightDragSidebar = () => {
                           </button>
 
                           <button
-                            onClick={() => toggleFavorite(app.name)}
-                            className={`absolute top-1.5 right-1.5 p-1 rounded-full transition-all ${favorites.includes(app.name)
+                            onClick={(e) => handleFavoriteClick(app.name, e)}
+                            className={`absolute top-1.5 right-1.5 p-1 rounded-full transition-all ${
+                              favorites.includes(app.name)
                                 ? "bg-yellow-500 text-white hover:bg-yellow-600"
                                 : "bg-slate-600/50 text-slate-400 hover:bg-slate-500/50 hover:text-white"
-                              }`}
+                            }`}
                           >
                             {favorites.includes(app.name) ? (
                               <Star className="h-3 w-3 fill-current" />
@@ -346,7 +399,7 @@ export const RightDragSidebar = () => {
               </button>
             </div>
             <p className="text-slate-300 mb-6">
-              Upgrade to unlock unlimited favorites, advanced features, and more!
+              You've reached the free limit of 3 favorites. Upgrade to unlock unlimited favorites and more!
             </p>
             <div className="space-y-4">
               <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600/50">
@@ -366,7 +419,16 @@ export const RightDragSidebar = () => {
                   </li>
                 </ul>
               </div>
-              <Button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg">
+              <Button 
+                className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg"
+                onClick={() => {
+                  setShowPremiumModal(false);
+                  toast({
+                    title: "Premium Activated",
+                    description: "Enjoy unlimited favorites and premium features!",
+                  });
+                }}
+              >
                 Upgrade Now - $4.99/month
               </Button>
               <Button
